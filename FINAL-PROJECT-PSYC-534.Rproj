@@ -1,13 +1,110 @@
-Version: 1.0
+read.csv("ufc-fighters-statistics.csv")
 
-RestoreWorkspace: Default
-SaveWorkspace: Default
-AlwaysSaveHistory: Default
+########### TASK 1 ##############
+# Goal: Find the average amount of fights in the career of a UFC fighter.
+# Purpose: Find the baseline # of fights that a fighter needs in order to be considered the GOAT.
 
-EnableCodeIndexing: Yes
-UseSpacesForTab: Yes
-NumSpacesForTab: 2
-Encoding: UTF-8
+# Read in the data
+df <- read.csv("ufc-fighters-statistics.csv")
 
-RnwWeave: Sweave
-LaTeX: pdfLaTeX
+# Calculate the average amount of matches played
+average_matches_played <- mean(df$wins + df$losses + df$draws)
+
+# Print the result
+print(paste("Average Matches Played:", round(average_matches_played, 2)))
+
+
+########### TASK 2 ##############
+# Goal: Find the GOAT.
+
+# Purpose:
+## The purpose of this graph is to show which fighters have the best win percentage...
+## based on their total matches fought. THIS IS THE REAL DATA FOR WHO WOULD BE CONSIDERED THE GOAT.
+## ...this data is not lying, or manipulating since it takes into account their losses and has a minimum...
+## of fights fought that is above the average of all UFC fighters, which is displayed below. 
+
+
+library(ggplot2)
+
+# Read in the data
+df <- read.csv("ufc-fighters-statistics.csv")
+
+calculate_win_percentage <- function(df) {
+  # Create a variable for fights fought
+  df$matches_played <- df$wins + df$losses + df$draws
+  
+  # Calculate win percentage
+  df$win_percentage <- round((df$wins / df$matches_played) * 100, 2)
+  
+  # Filter fighters with a minimum of 20 wins
+  df <- subset(df, wins >= 20)
+  
+  # Print out the top 10 fighters with the highest win percentage
+  top_10_winners <- df[order(-df$win_percentage), ][1:10, ]
+  print(top_10_winners)
+  
+  # Create a bar plot of the top 10 fighters
+  gg <- ggplot(top_10_winners, aes(x = reorder(name, win_percentage), y = win_percentage)) +
+    geom_bar(stat = "identity", fill = "skyblue") +
+    labs(x = "Fighter", y = "Win Percentage") +
+    ggtitle("Top 10 Fighters with Highest Win Percentage (Min. 20 Wins)") +
+    theme(axis.text.x = element_text(angle = 45, vjust = 0.75, hjust=1)) +  # Adjusted vjust value
+    geom_text(aes(label = paste(win_percentage, "%"), y = win_percentage), vjust = -0.5, size = 3, color = "black")
+  
+  # Print the graph
+  print(gg)
+  
+  # Return the dataframe with win percentage calculated
+  return(df)
+}
+
+# Call the function to calculate win percentage and print top 10 fighters with a bar plot
+calculate_win_percentage(df)
+
+
+########### TASK 3 ##############
+
+# Goal: Fake who the GOAT is.
+
+# How we do this: by ignoring the amount of fights lost, and only considering the wins...
+# we make the false claim that the following fighters have won more than any other fighter.
+# ... We lie in our graph by claiming that these fighters are in consideration for the GOAT...
+# but, in reality, these are fighters that have won a lot of fights, but have also lost a lot
+
+library(ggplot2)
+
+# Read in the data
+df <- read.csv("ufc-fighters-statistics.csv")
+
+# Define the function to find top 10 fighters with most wins, ignoring losses
+top_10_most_wins <- function(df) {
+  # Calculate win percentage by ignoring losses
+  df$win_percentage <- round((df$wins / (df$wins + df$losses + df$draws)) * 100, 2)
+  
+  # Filter fighters with a minimum of 20 wins
+  df <- subset(df, wins >= 20)
+  
+  # Sort fighters by wins
+  df <- df[order(df$wins), ]
+  
+  # Print the top 10 fighters
+  top_10_fighters <- tail(df, 10)
+  print(top_10_fighters)
+  
+  # Create a bar plot of the top 10 fighters
+  gg <- ggplot(top_10_fighters, aes(x = reorder(name, wins), y = wins)) +
+    geom_bar(stat = "identity", fill = "skyblue") +
+    labs(x = "Fighter", y = "Total Wins") +
+    ggtitle("Top 10 Fighters with Most Wins (Ignored Losses)") +
+    theme(axis.text.x = element_text(angle = 45, vjust = 0.75, hjust=1)) +
+    geom_text(aes(label = wins, y = wins), vjust = -0.5, size = 3, color = "black")
+  
+  # Print the graph
+  print(gg)
+  
+  # Return the dataframe with top 10 fighters
+  return(top_10_fighters)
+}
+
+# Call the function to find top 10 fighters with most wins and create a bar plot
+top_10_fighters <- top_10_most_wins(df)
